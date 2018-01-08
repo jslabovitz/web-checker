@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+require 'web-checker'
+
+uri, dir = *ARGV
+
+checker = WebChecker.new(site_uri: uri, site_dir: dir)
+checker.check
+checker.report
