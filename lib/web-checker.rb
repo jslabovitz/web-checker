@@ -1,11 +1,11 @@
 require 'addressable'
+require 'http'
 require 'nokogiri'
+require 'nokogumbo'
 require 'path'
-require 'tidy_ffi'
 
 class WebChecker
 
-  Version = '0.1'
   IgnoreErrors = %Q{
     <table> lacks "summary" attribute
     <img> lacks "alt" attribute
@@ -17,7 +17,7 @@ class WebChecker
     <iframe> proprietary attribute "allowfullscreen"
   }.split(/\n/).map(&:strip)
   LinkElementsXPath = '//@href | //@src'
-  SchemasDir = Path.new(__FILE__).dirname / 'schemas'
+  SchemasDir = Path.new(__FILE__).dirname / 'web-checker' / 'schemas'
   Schemas = {
     'feed' => SchemasDir / 'atom.xsd',
     'urlset' => SchemasDir / 'sitemap.xsd',
@@ -40,23 +40,27 @@ class WebChecker
 
   def check_uri(uri)
     uri = Addressable::URI.parse(uri)
-    return unless local_uri?(uri)
-    return if seen_uri?(uri)
-    ;;warn "CHECKING: #{uri}"
-    response = HTTP::Get.new(uri.path)
-    ;;pp(uri.path => response)
+    uri.normalize!
+    return unless local?(uri) && !seen?(uri)
+    # ;;warn "CHECKING: #{uri}"
+    response = HTTP.get(uri)
+    # ;;pp(response: response)
     @visited[uri] = true
-    case response.status
+    case response.code
     when 200...300
+      body = response.body.to_s
+      # ;;pp(body: body)
       case (type = response.headers['Content-Type'])
       when 'text/html'
-        check_html(uri, response.body)
+        check_html(uri, body)
       when 'text/css'
-        check_css(uri, response.body)
-      when 'application/xml'
-        check_xml(uri, response.body)
+        check_css(uri, body)
+      when 'application/xml', 'text/xml'
+        check_xml(uri, body)
+      when 'image/jpeg', 'image/png', 'image/gif', 'application/javascript'
+        # ignore
       else
-        ;;warn "SKIPPING: #{uri} (#{type})"
+        ;;warn "skipping unknown resource type: #{uri} (#{type})"
       end
     when 300...400
       redirect_uri = Addressable::URI.parse(response.headers['Location'])
@@ -69,25 +73,16 @@ class WebChecker
   end
 
   def check_html(uri, html)
-    tidy = TidyFFI::Tidy.new(html, char_encoding: 'UTF8')
-    unless (errors = tidy_errors(tidy)).empty?
-      warn "#{html_file} has invalid HTML"
-      errors.each do |error|
-        warn "\t#{error[:msg]}"
-      end
-      raise Error, "HTML parsing failed (via Tidy)"
-    end
-    html_doc = Nokogiri::HTML::Document.parse(html) { |config| config.strict }
-    unless html_doc.errors.empty?
-      show_errors(html_doc.errors)
-      raise Error, "HTML parsing failed (via Nokogiri)"
-    end
-    html_doc.xpath(LinkElementsXPath).each { |e| check_uri(uri + e.value) }
+    check_html_tidy(uri, html)
+    check_html_nokogiri(uri, html)
   end
 
-  def tidy_errors(tidy)
-    return [] unless tidy.errors
-    tidy.errors.split(/\n/).map { |str|
+  def check_html_tidy(uri, html)
+    tmp_file = Path.tmpfile
+    tmp_file.write(html)
+    errors = %x{tidy -utf8 -quiet -errors #{tmp_file} 2>&1}.split("\n")
+    errors = errors.map { |str|
+      # line 82 column 1 - Warning: <table> lacks "summary" attribute
       str =~ /^line (\d+) column (\d+) - (.*?): (.*)$/ or raise "Can't parse error: #{str.inspect}"
       {
         msg: str,
@@ -99,6 +94,21 @@ class WebChecker
     }.reject { |e|
       IgnoreErrors.include?(e[:error])
     }
+    unless errors.empty?
+      warn "#{uri} has invalid HTML"
+      show_errors(errors)
+      raise Error, "HTML parsing failed (via Tidy)"
+    end
+  end
+
+  def check_html_nokogiri(uri, html)
+    doc_class = (html =~ /<!DOCTYPE html>/i) ? Nokogiri::HTML5 : Nokogiri::HTML
+    doc = doc_class.parse(html) { |config| config.strict }
+    unless doc.errors.empty?
+      show_errors(doc.errors)
+      raise Error, "HTML parsing failed (via Nokogiri)"
+    end
+    doc.xpath(LinkElementsXPath).each { |e| check_uri(uri + e.value) }
   end
 
   def check_xml(uri, xml)
@@ -108,7 +118,8 @@ class WebChecker
       raise Error, "XML parsing failed"
     end
     root_name = xml_doc.root.name
-    schema = find_schema(root_name) or raise Error, "Unknown schema: #{root_name}"
+    schema_file = Schemas[root_name] or raise Error, "Unknown schema: #{root_name.inspect}"
+    schema = (@schemas[schema_file] ||= Nokogiri::XML::Schema(schema_file.open))
     validation_errors = schema.validate(xml_doc)
     unless validation_errors.empty?
       show_errors(validation_errors)
@@ -119,7 +130,7 @@ class WebChecker
 
   def show_errors(errors)
     errors.each do |error|
-      warn "#{error} [line #{error.line}, column #{error.column}]"
+      warn "#{error} [line #{error[:line]}, column #{error[:column]}]"
     end
   end
 
@@ -129,21 +140,12 @@ class WebChecker
     end
   end
 
-  def find_schema(name)
-    schema_file = Schemas[name] or return nil
-    unless (schema = @schemas[schema_file])
-      ;;warn "loading schema for <#{name}> element"
-      @schemas[schema_file] = schema = Nokogiri::XML::Schema(schema_file.open)
-    end
-    schema
-  end
-
-  def local_uri?
+  def local?(uri)
     (!uri.scheme && !uri.host) ||
       (uri.scheme == @site_uri.scheme && uri.host == @site_uri.host && uri.port == @site_uri.port)
   end
 
-  def seen?
+  def seen?(uri)
     @visited[uri]
   end
 
