@@ -18,12 +18,11 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map { |f| File.basename(f) }
   s.require_path  = 'lib'
 
-  s.add_dependency 'addressable', '~> 2'
-  s.add_dependency 'http', '~> 4'
-  s.add_dependency 'nokogiri', '~> 1'
-  s.add_dependency 'nokogumbo', '~> 2'
-  s.add_dependency 'path', '~> 2'
+  s.add_dependency 'addressable', '~> 2.7'
+  s.add_dependency 'http', '~> 5.0'
+  s.add_dependency 'nokogiri', '~> 1.11'
+  s.add_dependency 'nokogumbo', '~> 2.0'
+  s.add_dependency 'path', '~> 2.0'
 
-  s.add_development_dependency 'rake', '~> 12'
-  s.add_development_dependency 'rubygems-tasks', '~> 0.2'
+  s.add_development_dependency 'rake', '~> 13'
 end
