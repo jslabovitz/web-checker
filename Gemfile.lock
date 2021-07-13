@@ -11,7 +11,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.7.0)
+    addressable (2.8.0)
       public_suffix (>= 2.0.2, < 5.0)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
@@ -32,6 +32,8 @@ GEM
       rake (~> 13.0)
     nokogiri (1.11.5-arm64-darwin)
       racc (~> 1.4)
+    nokogiri (1.11.5-x86_64-linux)
+      racc (~> 1.4)
     nokogumbo (2.0.5)
       nokogiri (~> 1.8, >= 1.8.4)
     path (2.0.1)
@@ -44,6 +46,7 @@ GEM
 
 PLATFORMS
   arm64-darwin-20
+  x86_64-linux
 
 DEPENDENCIES
   rake (~> 13)
