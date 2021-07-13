@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map { |f| File.basename(f) }
   s.require_path  = 'lib'
 
-  s.add_dependency 'addressable', '~> 2.7'
+  s.add_dependency 'addressable', '~> 2.8'
   s.add_dependency 'http', '~> 5.0'
   s.add_dependency 'nokogiri', '~> 1.11'
   s.add_dependency 'nokogumbo', '~> 2.0'
