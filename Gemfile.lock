@@ -4,8 +4,7 @@ PATH
     web-checker (0.4)
       addressable (~> 2.8)
       http (~> 5.0)
-      nokogiri (~> 1.11)
-      nokogumbo (~> 2.0)
+      nokogiri (~> 1.12)
       path (~> 2.0)
 
 GEM
@@ -30,10 +29,8 @@ GEM
     llhttp-ffi (0.3.1)
       ffi-compiler (~> 1.0)
       rake (~> 13.0)
-    nokogiri (1.11.7-arm64-darwin)
+    nokogiri (1.12.2-arm64-darwin)
       racc (~> 1.4)
-    nokogumbo (2.0.5)
-      nokogiri (~> 1.8, >= 1.8.4)
     path (2.0.1)
     public_suffix (4.0.6)
     racc (1.5.2)
@@ -46,8 +43,8 @@ PLATFORMS
   arm64-darwin-20
 
 DEPENDENCIES
-  rake (~> 13)
+  rake (~> 13.0)
   web-checker!
 
 BUNDLED WITH
-   2.2.23
+   2.2.25

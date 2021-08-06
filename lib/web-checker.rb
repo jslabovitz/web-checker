@@ -1,7 +1,6 @@
 require 'addressable'
 require 'http'
 require 'nokogiri'
-require 'nokogumbo'
 require 'path'
 
 class WebChecker
@@ -71,7 +70,7 @@ class WebChecker
     when /^<!DOCTYPE html>/i
       Nokogiri::HTML5(data, max_errors: -1)
     else
-      Nokogiri::HTML(data) { |c| c.strict }
+      Nokogiri::HTML4(data) { |c| c.strict }
     end
     unless doc.errors.empty?
       show_errors(doc.errors)
