@@ -29,11 +29,13 @@ GEM
     llhttp-ffi (0.4.0)
       ffi-compiler (~> 1.0)
       rake (~> 13.0)
-    nokogiri (1.12.4-arm64-darwin)
+    nokogiri (1.13.3-arm64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.13.3-x86_64-linux)
       racc (~> 1.4)
     path (2.0.1)
     public_suffix (4.0.6)
-    racc (1.5.2)
+    racc (1.6.0)
     rake (13.0.6)
     unf (0.1.4)
       unf_ext
@@ -41,6 +43,7 @@ GEM
 
 PLATFORMS
   arm64-darwin-20
+  x86_64-linux
 
 DEPENDENCIES
   rake (~> 13.0)
