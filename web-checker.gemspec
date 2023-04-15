@@ -19,9 +19,9 @@ Gem::Specification.new do |s|
   s.require_path  = 'lib'
 
   s.add_dependency 'addressable', '~> 2.8'
-  s.add_dependency 'http', '~> 5.0'
-  s.add_dependency 'nokogiri', '~> 1.12'
-  s.add_dependency 'path', '~> 2.0'
+  s.add_dependency 'http', '~> 5.1'
+  s.add_dependency 'nokogiri', '~> 1.14'
+  s.add_dependency 'path', '~> 2.1'
 
   s.add_development_dependency 'rake', '~> 13.0'
 end
